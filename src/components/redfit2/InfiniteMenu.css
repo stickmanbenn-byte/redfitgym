@@ -1,0 +1,119 @@
+.infinite-menu-wrap {
+  position: relative;
+  width: 100%;
+  height: 640px;
+  overflow: hidden;
+  background: #060606;
+  border: 1px solid var(--rf-line);
+}
+
+@media (min-width: 900px) {
+  .infinite-menu-wrap { height: 760px; }
+}
+
+#infinite-grid-menu-canvas {
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+}
+#infinite-grid-menu-canvas:active { cursor: grabbing; }
+
+.face-title {
+  user-select: none;
+  position: absolute;
+  font-family: var(--rf-display, "Archivo Black", Impact, sans-serif);
+  font-weight: 900;
+  font-size: clamp(22px, 2.6vw, 44px);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--rf-fg, #f2f0ec);
+  left: 4%;
+  top: 50%;
+  margin: 0;
+  padding: 14px 22px;
+  background: #000;
+  border: 1px solid var(--rf-line, #1a1a1a);
+  max-width: 34%;
+  pointer-events: none;
+  z-index: 5;
+}
+.face-title.active {
+  opacity: 1;
+  transform: translate(0, -50%);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.face-title.inactive {
+  opacity: 0;
+  transform: translate(-20px, -50%);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.face-description {
+  user-select: none;
+  position: absolute;
+  max-width: 22ch;
+  top: 50%;
+  right: 4%;
+  padding: 12px 18px;
+  background: #000;
+  border: 1px solid var(--rf-line, #1a1a1a);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--rf-fg-dim, #8a8781);
+  margin: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.face-description.active {
+  opacity: 1;
+  transform: translate(0, -50%);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.face-description.inactive {
+  opacity: 0;
+  transform: translate(20px, -50%);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.action-button {
+  position: absolute;
+  left: 50%;
+  z-index: 10;
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  background: var(--rf-accent, #b01030);
+  color: #fff;
+  border: 4px solid #0a0a0a;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -10px rgba(176, 16, 48, 0.6);
+}
+.action-button.active {
+  bottom: 3.8em;
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+  transition: 0.5s ease;
+}
+.action-button.inactive {
+  bottom: -80px;
+  transform: translateX(-50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.1s ease;
+}
+.action-button-icon {
+  position: relative;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+}
+
+@media (max-width: 1100px) {
+  .face-title,
+  .face-description { display: none; }
+}

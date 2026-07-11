@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat .lovable/project.json)",
+      "Bash(cat components.json)",
+      "Bash(sed 's/.*\\\\.//')",
+      "Bash(curl -s -o /dev/null -w \"picsum:%{http_code} \" \"https://picsum.photos/200\")",
+      "Bash(curl -s -o /dev/null -w \"unsplash:%{http_code}\\\\n\" \"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200\")",
+      "Bash(npm install *)",
+      "Bash(node scripts/gen-local-assets.mjs)",
+      "Bash(node scripts/copy-real-assets.mjs)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

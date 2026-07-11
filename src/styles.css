@@ -1,0 +1,69 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import "./styles/redfit.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --black: #000000;
+  --near-black: #0a0a0a;
+  --burgundy: #6D001A;
+  --burgundy-bright: #e0344a;
+  --white: #FFFFFF;
+  --grey-text: #b8b8b8;
+  --grey-muted: #888888;
+  --grey-border: #222222;
+
+  --background: var(--black);
+  --foreground: var(--white);
+  --radius: 0.125rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-black: var(--black);
+  --color-near-black: var(--near-black);
+  --color-burgundy: var(--burgundy);
+  --color-burgundy-bright: var(--burgundy-bright);
+  --color-grey-text: var(--grey-text);
+  --color-grey-muted: var(--grey-muted);
+  --color-grey-border: var(--grey-border);
+  --color-white: var(--white);
+  --color-border: var(--grey-border);
+  --color-ring: var(--burgundy-bright);
+  --font-display: "Archivo Black", "Anton", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--grey-border);
+  }
+  html, body {
+    background-color: var(--black);
+    color: var(--white);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--burgundy-bright);
+    color: var(--white);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html.redfit-cursor, html.redfit-cursor * {
+    cursor: none !important;
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+@utility sharp {
+  border-radius: 2px;
+}
