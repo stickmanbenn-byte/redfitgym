@@ -25,8 +25,10 @@ export function useReveal() {
             opacity: 1,
             y: 0,
             duration: 1.1,
-            ease: "expo.out",
-            onComplete: () => { el.style.willChange = "auto"; },
+            ease: "power3.out",
+            onComplete: () => {
+              el.style.willChange = "auto";
+            },
           }),
       });
       triggers.push(t);
@@ -36,7 +38,12 @@ export function useReveal() {
   }, []);
 }
 
-export function Reveal({ children, className, style, as: Tag = "div" }: {
+export function Reveal({
+  children,
+  className,
+  style,
+  as: Tag = "div",
+}: {
   children: ReactNode;
   className?: string;
   style?: React.CSSProperties;
@@ -52,8 +59,8 @@ export function Reveal({ children, className, style, as: Tag = "div" }: {
 
 export function SectionHeader({ index, label }: { index: string; label: string }) {
   return (
-    <div className="rf-section-header" data-reveal>
-      <span className="rf-eyebrow rf-accent">{index}</span>
+    <div data-reveal className="rf-section-header">
+      <span className="rf-eyebrow">{index}</span>
       <span className="line" />
       <span className="rf-eyebrow">{label}</span>
     </div>

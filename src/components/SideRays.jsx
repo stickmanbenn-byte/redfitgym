@@ -28,6 +28,8 @@ const SideRays = ({
   blend = 0.75,
   falloff = 1.6,
   opacity = 1.0,
+  originOffsetX = 0,
+  originOffsetY = 0,
   className = ''
 }) => {
   const containerRef = useRef(null);
@@ -112,6 +114,8 @@ uniform float iSaturation;
 uniform float iBlend;
 uniform float iFalloff;
 uniform float iOpacity;
+uniform float iOriginOffsetX;
+uniform float iOriginOffsetY;
 
 float rayStrength(vec2 raySource, vec2 rayRefDirection, vec2 coord, float seedA, float seedB, float speed) {
   vec2 sourceToCoord = coord - raySource;
@@ -129,7 +133,11 @@ void main() {
   if (iFlipY > 0.5) fragCoord.y = iResolution.y - fragCoord.y;
 
   vec2 coord = vec2(fragCoord.x, iResolution.y - fragCoord.y);
-  vec2 rayPos = vec2(iResolution.x * 1.1, -0.5 * iResolution.y);
+  // Block 4: cursor-reactive origin offset
+  vec2 rayPos = vec2(
+    iResolution.x * (1.1 + iOriginOffsetX),
+    iResolution.y * (-0.5 + iOriginOffsetY)
+  );
 
   float tiltRad = iTilt * 3.14159265 / 180.0;
   float cs = cos(tiltRad);
@@ -172,7 +180,9 @@ void main() {
         iSaturation: { value: saturation },
         iBlend: { value: blend },
         iFalloff: { value: falloff },
-        iOpacity: { value: opacity }
+        iOpacity: { value: opacity },
+        iOriginOffsetX: { value: originOffsetX },
+        iOriginOffsetY: { value: originOffsetY }
       };
       uniformsRef.current = uniforms;
 
@@ -250,9 +260,11 @@ void main() {
     u.iBlend.value = blend;
     u.iFalloff.value = falloff;
     u.iOpacity.value = opacity;
-  }, [speed, rayColor1, rayColor2, intensity, spread, origin, tilt, saturation, blend, falloff, opacity]);
+    u.iOriginOffsetX.value = originOffsetX;
+    u.iOriginOffsetY.value = originOffsetY;
+  }, [speed, rayColor1, rayColor2, intensity, spread, origin, tilt, saturation, blend, falloff, opacity, originOffsetX, originOffsetY]);
 
-  return <div ref={containerRef} className={`side-rays-container ${className}`.trim()} />;
+  return <div ref={containerRef} className={`side-rays-container ${className}`} />;
 };
 
 export default SideRays;
