@@ -17,6 +17,9 @@ function LiveCount() {
   );
 }
 
+// ── Single source of truth for hero scroll distance (BUG 2 + ENHANCE 1) ──
+const HERO_SCROLL_LENGTH = "+=200%";
+
 export function Hero() {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -91,14 +94,28 @@ export function Hero() {
       render();
     };
     resize();
-    window.addEventListener("resize", resize);
 
-    // SplitType headline
-    const headline = root.querySelector<HTMLElement>(".rf-hero-headline");
+    // BUG 3 FIX: rAF-throttled resize to prevent jank on mobile address-bar toggle
+    let ticking = false;
+    const onResize = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { resize(); ticking = false; });
+    };
+    window.addEventListener("resize", onResize);
+
+    // BUG 1 FIX: Split only the static lines, exclude .rf-swap-word-holder entirely
+    const staticLines = root.querySelectorAll<HTMLElement>(".rf-hero-line:not(:has(.rf-swap-word-holder))");
     let split: SplitType | null = null;
-    if (headline) {
-      split = new SplitType(headline, { types: "words,chars" });
+    if (staticLines.length) {
+      split = new SplitType(staticLines, { types: "words,chars" });
       gsap.set(split.chars, { yPercent: 110, opacity: 0 });
+    }
+
+    // Hide swap-word-holder initially for block entrance animation
+    const swapHolder = root.querySelector<HTMLElement>(".rf-swap-word-holder");
+    if (swapHolder) {
+      gsap.set(swapHolder, { yPercent: 100, opacity: 0 });
     }
 
     // Initialize word swap stack — only first word visible, others below and hidden
@@ -108,32 +125,12 @@ export function Hero() {
       y: (i) => (i === 0 ? 0 : 24),
     });
 
-    // Rotate the third word every 2.5s (unless reduced motion)
     const reduceMotion =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let rotateInterval: number | undefined;
-    if (!reduceMotion && allWords.length > 1) {
-      let idx = 0;
-      rotateInterval = window.setInterval(() => {
-        const current = allWords[idx];
-        const next = allWords[(idx + 1) % allWords.length];
-        gsap.to(current, {
-          y: -24,
-          opacity: 0,
-          duration: 0.6,
-          ease: "power3.inOut",
-          overwrite: "auto",
-        });
-        gsap.fromTo(
-          next,
-          { y: 24, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, ease: "power3.inOut", overwrite: "auto" }
-        );
-        idx = (idx + 1) % allWords.length;
-      }, 2500);
-    }
 
+    // ENHANCE 2: track current word index for scroll-driven rotation
+    let lastWordIdx = 0;
 
     const ctxAnim = gsap.context(() => {
       ScrollTrigger.matchMedia({
@@ -149,7 +146,11 @@ export function Hero() {
               duration: 1.1,
             });
           }
-          // After char reveal, force only first swap word visible
+          // BUG 1 FIX: Animate swap-word-holder as a single block (not char-split)
+          if (swapHolder) {
+            inTl.from(swapHolder, { yPercent: 100, opacity: 0, duration: 0.9 }, "-=0.6");
+          }
+          // After entrance, force only first swap word visible
           inTl.set(words, {
             opacity: (i) => (i === 0 ? 1 : 0),
             y: (i) => (i === 0 ? 0 : 24),
@@ -162,28 +163,50 @@ export function Hero() {
             .to(".rf-hero-scroll-hint", { opacity: 1, duration: 0.6 }, "-=0.4");
 
 
-          // Pin hero for the full plate animation, then unpin so next section takes over
+          // Pin hero for barbell animation with ENHANCE 2 scroll-driven word rotation
           gsap.to(state, {
             frame: TOTAL,
             ease: "none",
             scrollTrigger: {
               trigger: root,
               start: "top top",
-              end: "+=350%",
+              end: HERO_SCROLL_LENGTH,
               pin: true,
               pinSpacing: true,
               scrub: 1,
               invalidateOnRefresh: true,
-              onUpdate: render,
+              onUpdate: (self) => {
+                render();
+                // ENHANCE 2: scroll-driven word crossfade
+                if (words.length > 1) {
+                  const idx = Math.min(words.length - 1, Math.floor(self.progress * words.length));
+                  if (idx !== lastWordIdx) {
+                    const current = words[lastWordIdx];
+                    const next = words[idx];
+                    gsap.to(current, {
+                      y: -24,
+                      opacity: 0,
+                      duration: 0.45,
+                      ease: "power3.inOut",
+                      overwrite: "auto",
+                    });
+                    gsap.fromTo(
+                      next,
+                      { y: 24, opacity: 0 },
+                      { y: 0, opacity: 1, duration: 0.45, ease: "power3.inOut", overwrite: "auto" }
+                    );
+                    lastWordIdx = idx;
+                  }
+                }
+              },
             },
           });
 
 
-
-
-          // DASHBOARD — desktop/tablet cinematic reveal, pinned drift & exit
+          // ENHANCE 3: Consolidated dashboard motion — one timeline, one ScrollTrigger
           const dash = root.querySelector<HTMLElement>(".rf-hero-dashboard");
           if (dash) {
+            // Initial hidden state
             gsap.set(dash, {
               opacity: 0,
               x: 120,
@@ -193,6 +216,7 @@ export function Hero() {
               transformPerspective: 900,
               transformOrigin: "center center",
             });
+            // One-shot entrance (not scroll-linked)
             gsap.to(dash, {
               opacity: 1,
               x: 0,
@@ -203,38 +227,31 @@ export function Hero() {
               ease: "power3.out",
               delay: 0.35,
             });
-            // gentle float
-            gsap.to(dash, {
-              y: "+=6",
-              rotate: 0.4,
-              duration: 3.2,
-              ease: "sine.inOut",
-              yoyo: true,
-              repeat: -1,
-            });
-            // scroll-linked drift + exit
-            gsap.to(dash, {
-              yPercent: -10,
-              ease: "none",
+
+            // Single scroll timeline: float/drift (0–70%) then exit (70–100%)
+            const dashTl = gsap.timeline({
               scrollTrigger: {
                 trigger: root,
                 start: "top top",
-                end: "+=400%",
+                end: HERO_SCROLL_LENGTH,
                 scrub: 0.6,
               },
             });
-            gsap.to(dash, {
+            // Drift phase: gentle upward movement with slight rotation
+            dashTl.to(dash, {
+              yPercent: -10,
+              rotate: 0.4,
+              ease: "none",
+              duration: 0.7,
+            });
+            // Exit phase: accelerate out, fade, blur
+            dashTl.to(dash, {
               y: -80,
               opacity: 0,
               scale: 0.95,
               filter: "blur(8px)",
               ease: "power2.in",
-              scrollTrigger: {
-                trigger: root,
-                start: "top+=280% top",
-                end: "+=120%",
-                scrub: 0.6,
-              },
+              duration: 0.3,
             });
           }
         },
@@ -246,6 +263,10 @@ export function Hero() {
           const inTl = gsap.timeline({ delay: 0.1, defaults: { ease: "power3.out" } });
           if (split?.chars?.length) {
             inTl.to(split.chars, { yPercent: 0, opacity: 1, stagger: 0.02, duration: 0.9 });
+          }
+          // BUG 1 FIX: Block-animate swap holder on mobile too
+          if (swapHolder) {
+            inTl.from(swapHolder, { yPercent: 100, opacity: 0, duration: 0.7 }, "-=0.4");
           }
           // After char reveal, force only first swap word visible
           inTl.set(words, {
@@ -260,6 +281,20 @@ export function Hero() {
 
           gsap.to(state, { frame: TOTAL, duration: 4, ease: "power2.inOut", onUpdate: render });
 
+          // Mobile: keep timer-based word rotation (no scroll pin to drive it)
+          if (words.length > 1) {
+            let mIdx = 0;
+            const mInterval = window.setInterval(() => {
+              const current = words[mIdx];
+              const next = words[(mIdx + 1) % words.length];
+              gsap.to(current, { y: -24, opacity: 0, duration: 0.6, ease: "power3.inOut", overwrite: "auto" });
+              gsap.fromTo(next, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.inOut", overwrite: "auto" });
+              mIdx = (mIdx + 1) % words.length;
+            }, 2500);
+            // ScrollTrigger.matchMedia cleanup handles this automatically
+            return () => window.clearInterval(mInterval);
+          }
+
           // DASHBOARD — mobile fade-in only
           const dashM = root.querySelector<HTMLElement>(".rf-hero-dashboard");
           if (dashM) {
@@ -270,7 +305,6 @@ export function Hero() {
             );
           }
         },
-
 
 
         // REDUCED MOTION — no pin, no scrub, everything visible immediately
@@ -287,6 +321,7 @@ export function Hero() {
           );
           gsap.set(".rf-hero-dashboard", { opacity: 1, x: 0, scale: 1, rotateY: 4, filter: "none" });
           if (split?.chars) gsap.set(split.chars, { opacity: 1, yPercent: 0 });
+          if (swapHolder) gsap.set(swapHolder, { opacity: 1, yPercent: 0 });
           const words = root.querySelectorAll<HTMLElement>(".rf-hero-headline .rf-swap-word");
           gsap.set(words, { opacity: (i) => (i === 0 ? 1 : 0), y: (i) => (i === 0 ? 0 : 24) });
           state.frame = TOTAL;
@@ -304,9 +339,8 @@ export function Hero() {
     }
 
     return () => {
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("load", onLoad);
-      if (rotateInterval) window.clearInterval(rotateInterval);
       split?.revert();
       ctxAnim.revert();
     };
