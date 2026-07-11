@@ -1,0 +1,151 @@
+/* ══════════════════════════════════════
+   REDFIT Polish Pass CSS (Blocks 2-4)
+   ══════════════════════════════════════ */
+
+/* ── Block 2: Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rf-accent, #b01030);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rf-accent-hot, #f43f5e);
+}
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rf-accent, #b01030) #111111;
+}
+
+/* ── Block 2: Tabular numerals for stats/numbers ── */
+.rf-stat-num,
+.rf-hero-counter,
+.rf-hero-counter b,
+.rf-price-amount,
+.rf-psc-body .n,
+.rf-psc-index {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Block 2: Scroll progress rail ── */
+.rf-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--rf-accent-hot, #f43f5e);
+  z-index: 9999;
+  pointer-events: none;
+  will-change: width;
+}
+
+/* ── Block 2: Branded preloader ── */
+.rf-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rf-preloader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.rf-preloader-brand {
+  font-family: var(--rf-display, "Archivo Black", sans-serif);
+  font-size: 28px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--rf-fg, #f2f0ec);
+}
+.rf-preloader-brand span {
+  color: var(--rf-accent-hot, #f43f5e);
+}
+.rf-preloader-bar {
+  width: 160px;
+  height: 2px;
+  background: #1e1e1e;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.rf-preloader-fill {
+  height: 100%;
+  background: var(--rf-accent-hot, #f43f5e);
+  transition: width 0.3s ease;
+}
+.rf-preloader-pct {
+  font-family: var(--rf-display, "Archivo Black", sans-serif);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--rf-fg-dim, #8a8781);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Block 3: Skip-to-content link ── */
+.rf-skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 99999;
+  padding: 12px 20px;
+  background: var(--rf-accent-hot, #f43f5e);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: top 0.2s ease;
+}
+.rf-skip-link:focus {
+  top: 16px;
+  outline: 2px solid var(--rf-fg, #f2f0ec);
+  outline-offset: 2px;
+}
+
+/* ── Block 3: Active nav link indicator ── */
+.rf-glass-links a.rf-nav-active {
+  opacity: 1;
+  color: var(--rf-accent-hot, #f43f5e) !important;
+  position: relative;
+}
+.rf-glass-links a.rf-nav-active::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--rf-accent-hot, #f43f5e);
+}
+
+/* ── Block 4: Contrast pass for sub-14px text ── */
+.rf-hero-counter b {
+  color: var(--rf-accent-hot, #f43f5e) !important;
+  font-weight: normal;
+}
+
+/* ── Block 4: Hero grain overlay ── */
+.rf-hero-grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+}
